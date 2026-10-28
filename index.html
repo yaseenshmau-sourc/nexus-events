@@ -44,7 +44,7 @@ label{font-size:14px;color:var(--m)}
 <body>
 <div class="wrap" id="app"><p class="muted">جاري التحميل…</p></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
 <script>
 /* ===== الإعدادات: الصق المفتاح العام (sb_publishable_...) هون ===== */
 const SUPABASE_URL = "https://sswepnelpxzwffofbrst.supabase.co";
@@ -52,7 +52,7 @@ const SUPABASE_KEY = "PASTE_PUBLISHABLE_KEY_HERE";
 const GUILD_ID = "1564502050614804571";
 /* ================================================================ */
 
-const sb = supabase.createClient(sb_publishable_5i_i1TtcucbEwn0RX_uDEg_i8UHRfHv);
+const sb = supabase.createClient("sb_publishable_5i_i1TtcucbEwn0RX_uDEg_i8UHRfHv");
 const app = document.getElementById('app');
 let me = null, isAdmin = false, tab = 'events', events = [], myRegs = new Set(), notice = '';
 

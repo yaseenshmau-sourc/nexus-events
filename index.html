@@ -3,189 +3,207 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>فعاليات Nexus</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<meta name="theme-color" content="#05070f">
+<title>Nexus Gaming | الفعاليات</title>
+<link href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#14131a;--s:#1d1c27;--s2:#272634;--t:#ece9f5;--m:#9a97ad;--a:#8f7cff;--g:#e8c468;--r:#ff7a7a;--ok:#5fd18f}
-:root[data-theme="light"]{--bg:#f4f3f8;--s:#fff;--s2:#e9e7f2;--t:#1c1b26;--m:#5f5c73;--a:#5b45e0;--g:#a87a00;--r:#c62f2f;--ok:#1d8a52}
+:root{--bg:#05070f;--s:#0b1226;--s2:#141d38;--b:#2f7bff;--c:#3fd0ff;--t:#e8f1ff;--m:#8493b5;--r:#ff3b4e;--g:#ffcf5a}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--t);font-family:'IBM Plex Sans Arabic',system-ui,sans-serif;line-height:1.6;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0)}
-.wrap{max-width:640px;margin:0 auto;padding:16px}
-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
-h1{font-size:22px;margin:0}
-button,input,textarea{font:inherit;color:inherit}
-button{background:var(--a);color:#fff;border:0;border-radius:10px;padding:9px 16px;font-weight:600;cursor:pointer}
-button.ghost{background:var(--s2);color:var(--t)}
-button.danger{background:var(--r);color:#fff}
-button:disabled{opacity:.45;cursor:not-allowed}
-button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--a);outline-offset:2px}
-nav{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto}
-nav button{background:var(--s);color:var(--m);white-space:nowrap}
-nav button.on{background:var(--a);color:#fff}
-.card{background:var(--s);border-radius:14px;padding:16px;margin-bottom:12px}
-.card h3{margin:0 0 4px;font-size:18px}
-.muted{color:var(--m);font-size:14px}
-.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:12px}
-.count{font-weight:700;font-variant-numeric:tabular-nums;color:var(--g)}
-.closed{color:var(--r)}
-.place{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--s2)}
-.place b{color:var(--g);min-width:28px}
-.place img{width:32px;height:32px;border-radius:50%}
-input,textarea{width:100%;background:var(--s2);border:1px solid transparent;border-radius:10px;padding:10px;margin:4px 0 10px}
-label{font-size:14px;color:var(--m)}
-.login{text-align:center;padding:60px 16px}
-.login p{color:var(--m);margin:8px 0 22px}
-.msg{background:var(--s2);border-radius:10px;padding:10px 14px;margin-bottom:12px}
-.user{display:flex;align-items:center;gap:8px;font-size:14px}
-.user img{width:30px;height:30px;border-radius:50%}
+body{margin:0;background:var(--bg);color:var(--t);font:16px/1.6 Tajawal,system-ui,sans-serif;padding:env(safe-area-inset-top,0) 0 env(safe-area-inset-bottom,0);min-height:100vh}
+h1,h2,h3{font-family:Lalezar,Tajawal,sans-serif;font-weight:400;margin:0}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+button:focus-visible{outline:2px solid var(--c);outline-offset:2px}
+#intro{position:fixed;inset:0;z-index:50;background:#000;display:grid;place-items:center;transition:opacity .8s;overflow:hidden}
+#intro.out{opacity:0;pointer-events:none}
+#intro img{width:100%;max-height:100%;object-fit:contain;animation:zin 3.8s cubic-bezier(.2,.7,.2,1) forwards}
+#intro::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(120,200,255,.35) 50%,transparent 60%);transform:translateX(120%);animation:sweep 1.6s 1.1s ease-out forwards}
+.bar{position:absolute;bottom:calc(28px + env(safe-area-inset-bottom,0px));left:20%;right:20%;height:3px;background:#12203f;border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--b),var(--c));animation:fill 3.6s linear forwards}
+@keyframes zin{0%{transform:scale(1.35);opacity:0;filter:blur(14px) brightness(2.5)}35%{opacity:1;filter:blur(0) brightness(1.3)}100%{transform:scale(1);opacity:1;filter:none}}
+@keyframes sweep{to{transform:translateX(-120%)}}
+@keyframes fill{to{width:100%}}
+.boot{padding:40vh 20px;text-align:center;color:var(--m)}
+#fire{position:fixed;inset:0;z-index:0}
+.login{position:relative;z-index:1;min-height:100vh;display:grid;place-items:center;padding:20px}
+.lc{width:100%;max-width:380px;text-align:center;padding:34px 24px;border-radius:24px;background:rgba(8,14,32,.55);backdrop-filter:blur(10px);border:1px solid rgba(63,208,255,.35);box-shadow:0 0 60px rgba(47,123,255,.35),inset 0 0 30px rgba(47,123,255,.12);animation:rise .9s ease-out both}
+@keyframes rise{from{opacity:0;transform:translateY(30px)}}
+.lc h1{font-size:40px;line-height:1.2;text-shadow:0 0 24px var(--b)}
+.lc p{color:var(--m);margin:10px 0 26px}
+.go{width:100%;padding:15px;border-radius:14px;font-weight:700;font-size:18px;background:linear-gradient(135deg,#5865f2,var(--b));box-shadow:0 0 28px rgba(88,101,242,.6);transition:transform .15s}
+.go:active{transform:scale(.97)}
+.err{background:rgba(255,59,78,.15);border:1px solid var(--r);border-radius:12px;padding:10px;margin-bottom:16px;font-size:14px}
+.wrap{max-width:680px;margin:0 auto;padding:0 14px 40px}
+.hero{position:relative;margin:0 -14px;padding:18px 18px 22px;background:linear-gradient(#05070fcc,#05070f 98%),url(logo.jpg) center/cover;border-bottom:1px solid #16264a}
+.hero .u{display:flex;align-items:center;gap:10px}
+.hero .u img{width:44px;height:44px;border-radius:50%;border:2px solid var(--c);box-shadow:0 0 16px var(--b)}
+.hero .u b{flex:1;font-size:17px}
+.hero .u button{background:#ffffff14;padding:7px 14px;border-radius:10px;font-size:14px}
+.hero h2{font-size:34px;margin:18px 0 12px;text-shadow:0 0 22px var(--b)}
+.chips{display:flex;gap:8px}
+.chips span{flex:1;background:#0b1226cc;border:1px solid #1b2c55;border-radius:12px;padding:8px;text-align:center;font-size:13px;color:var(--m)}
+.chips b{display:block;font:22px Lalezar;color:var(--c)}
+nav{display:flex;gap:6px;margin:16px 0;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+nav button{flex:1;background:var(--s);color:var(--m);padding:11px;border-radius:12px;font-weight:700}
+nav button.on{background:linear-gradient(135deg,var(--b),#1b4fd0);color:#fff;box-shadow:0 0 20px #2f7bff66}
+.msg{background:var(--s2);border-right:3px solid var(--c);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+.card{--k:var(--b);position:relative;background:linear-gradient(160deg,var(--s2),var(--s));border-radius:18px;padding:18px 18px 18px 16px;margin-bottom:14px;border:1px solid #1b2c55;border-right:5px solid var(--k);box-shadow:0 8px 30px #0008,0 0 40px color-mix(in srgb,var(--k) 18%,transparent)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px;color:var(--m)}
+.tag{background:color-mix(in srgb,var(--k) 25%,transparent);color:var(--k);padding:3px 12px;border-radius:20px;font-weight:700;border:1px solid var(--k)}
+.card h3{font-size:25px;margin:10px 0 2px}
+.card p{margin:0;color:var(--m);font-size:15px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px}
+.cd{font-weight:700;color:var(--c);font-variant-numeric:tabular-nums}
+.cd.x{color:var(--r)}
+.btn{padding:10px 22px;border-radius:12px;font-weight:700;background:linear-gradient(135deg,var(--b),var(--c));color:#04101f}
+.btn.g{background:#ffffff14;color:var(--t)}
+.btn:disabled{opacity:.4}
+.win{margin-top:14px;border-top:1px dashed #2a3c6b;padding-top:10px}
+.w{display:flex;align-items:center;gap:10px;padding:6px 0}
+.w b{font:20px Lalezar;color:var(--g);min-width:26px}
+.w img{width:30px;height:30px;border-radius:50%}
+.w.me{color:var(--g)}
+.done{color:var(--g);font-weight:700}
+label{display:block;font-size:14px;color:var(--m);margin-top:10px}
+input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;border-radius:10px;padding:10px;color:var(--t);font:inherit;margin-top:4px}
+.empty{text-align:center;color:var(--m);padding:40px 10px}
+#reveal{position:fixed;inset:0;z-index:40;background:radial-gradient(circle,#1a2f66ee,#02040aee);display:grid;place-content:center;text-align:center;padding:20px}
+#reveal h2{font-size:46px;color:var(--g);text-shadow:0 0 40px var(--g);animation:rise .8s both}
+#reveal .n{font:34px Lalezar;margin:14px 0;animation:rise .8s both}
+#reveal small{color:var(--m);margin-top:30px;display:block}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01s!important;animation-delay:0s!important}}
 </style>
 </head>
 <body>
-<div class="wrap" id="app"><p class="muted">جاري التحميل…</p></div>
-
+<div id="intro"><img src="logo.jpg" alt="Nexus Gaming"><div class="bar"><i></i></div></div>
+<div id="app"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
 <script>
-/* ===== الإعدادات: الصق المفتاح العام (sb_publishable_...) هون ===== */
-const SUPABASE_URL = "https://sswepnelpxzwffofbrst.supabase.co";
-const SUPABASE_KEY = "sb_publishable_5i_i1TtcucbEwn0RX_uDEg_i8UHRfHv";
-const GUILD_ID = "1564502050614804571";
-/* ================================================================ */
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-const app = document.getElementById('app');
-let me = null, isAdmin = false, tab = 'events', events = [], myRegs = new Set(), notice = '';
+const FIRE=[195,32]; /* درجة لون النار: للون برتقالي غيّرها إلى [12,40] */
+const TYPES={draw:['سحب','#3fd0ff'],contest:['مسابقة','#2f7bff'],vote:['تصويت','#b06bff'],tournament:['بطولة','#ff3b4e']};
+const app=document.getElementById('app');
+let sb,me,isAdmin=false,tab='events',events=[],wins={},myRegs=new Set(),notice='';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>new Date(d).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'});
+const pad=n=>String(n).padStart(2,'0');
 
-const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = d => new Date(d).toLocaleString('ar', {dateStyle:'medium', timeStyle:'short'});
+function playIntro(){return new Promise(r=>{const el=document.getElementById('intro');let seen;
+ try{seen=sessionStorage.getItem('nx')}catch(e){}
+ if(seen){el.remove();return r()}
+ try{sessionStorage.setItem('nx','1')}catch(e){}
+ let done=0;const end=()=>{if(done++)return;el.classList.add('out');setTimeout(()=>{el.remove();r()},800)};
+ setTimeout(end,3900);el.onclick=end})}
 
-async function login(){
-  await sb.auth.signInWithOAuth({provider:'discord', options:{scopes:'identify guilds.members.read', redirectTo: location.origin + location.pathname}});
-}
-async function logout(){ await sb.auth.signOut(); location.reload(); }
-
-async function init(){
-  const {data:{session}} = await sb.auth.getSession();
-  if(!session) return renderLogin();
-  const u = session.user, meta = u.user_metadata || {};
-  const id = meta.provider_id;
-  let joined = null;
-  if(session.provider_token){
-    try{
-      const r = await fetch(`https://discord.com/api/v10/users/@me/guilds/${GUILD_ID}/member`, {headers:{Authorization:'Bearer '+session.provider_token}});
-      if(!r.ok){ await sb.auth.signOut(); return renderLogin('لازم تكون عضو بالسيرفر عشان تدخل الموقع.'); }
-      joined = (await r.json()).joined_at;
-    }catch(e){ await sb.auth.signOut(); return renderLogin('تعذّر التحقق من العضوية، جرّب مرة ثانية.'); }
-    await sb.from('members').upsert({discord_id:id, username:meta.full_name || meta.name || 'عضو', avatar_url:meta.avatar_url, joined_server_at:joined}, {onConflict:'discord_id', ignoreDuplicates:true});
-  }
-  const {data:m} = await sb.from('members').select('discord_id,username,avatar_url,is_admin').eq('discord_id', id).maybeSingle();
-  if(!m){ await sb.auth.signOut(); return renderLogin('سجّل الدخول من جديد لإكمال التحقق.'); }
-  me = m; isAdmin = !!m.is_admin;
-  await load();
-  render();
-  setInterval(tick, 1000);
-}
-
-async function load(){
-  const {data:ev} = await sb.from('events').select('*').eq('is_archived', false).order('starts_at');
-  events = ev || [];
-  const {data:rg} = await sb.from('registrations').select('event_id,status').eq('member_id', me.discord_id).neq('status','cancelled');
-  myRegs = new Set((rg || []).map(r => r.event_id));
-}
+function fire(cv){const x=cv.getContext('2d');let W,H,P=[];
+ const rs=()=>{W=cv.width=innerWidth;H=cv.height=innerHeight};rs();addEventListener('resize',rs);
+ if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+ (function f(){if(!cv.isConnected)return;
+  x.globalCompositeOperation='source-over';x.fillStyle='rgba(5,7,15,.2)';x.fillRect(0,0,W,H);
+  x.globalCompositeOperation='lighter';
+  for(let i=0;i<7;i++)P.push({x:W*(.3+Math.random()*.4),y:H*.66,vx:(Math.random()-.5)*.7,vy:-(1.3+Math.random()*2.8),r:9+Math.random()*16,l:1});
+  P=P.filter(p=>p.l>0);
+  for(const p of P){p.x+=p.vx+Math.sin(p.y/28)*.5;p.y+=p.vy;p.l-=.011;p.r*=.986;
+   x.fillStyle=`hsla(${FIRE[0]+p.l*FIRE[1]},100%,${42+p.l*28}%,${p.l*.4})`;x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill()}
+  requestAnimationFrame(f)})()}
 
 function renderLogin(msg){
-  app.innerHTML = `<div class="login"><h1>فعاليات Nexus</h1><p>سجّل دخولك بحساب ديسكورد للتسجيل بالفعاليات. الموقع لأعضاء السيرفر فقط.</p>${msg ? `<div class="msg">${esc(msg)}</div>` : ''}<button onclick="login()">الدخول بحساب ديسكورد</button></div>`;
-}
+ app.innerHTML=`<canvas id="fire"></canvas><div class="login"><div class="lc"><h1>Nexus Gaming</h1><p>مسابقات وفعاليات وبطولات مجتمعنا. الدخول لأعضاء السيرفر فقط.</p>${msg?`<div class="err">${esc(msg)}</div>`:''}<button class="go" onclick="login()">المتابعة بحساب ديسكورد</button></div></div>`;
+ fire(document.getElementById('fire'))}
+async function login(){await sb.auth.signInWithOAuth({provider:'discord',options:{scopes:'identify guilds.members.read',redirectTo:location.origin+location.pathname}})}
+async function logout(){await sb.auth.signOut();location.reload()}
+
+async function init(){
+ const ip=playIntro();
+ if(!window.NEXUS||!NEXUS.key||NEXUS.key.includes('PASTE')){await ip;app.innerHTML='<div class="boot">ملف config.js ناقص أو المفتاح غير مضاف.</div>';return}
+ sb=supabase.createClient(NEXUS.url,NEXUS.key);
+ const {data:{session}}=await sb.auth.getSession();
+ await ip;
+ if(!session)return renderLogin();
+ app.innerHTML='<div class="boot">جاري التحقق…</div>';
+ const meta=session.user.user_metadata||{},id=meta.provider_id;
+ if(session.provider_token){
+  try{const r=await fetch(`https://discord.com/api/v10/users/@me/guilds/${NEXUS.guild}/member`,{headers:{Authorization:'Bearer '+session.provider_token}});
+   if(!r.ok){await sb.auth.signOut();return renderLogin('لازم تكون عضو بالسيرفر عشان تدخل.')}
+   const j=await r.json();
+   await sb.from('members').upsert({discord_id:id,username:meta.full_name||meta.name||'عضو',avatar_url:meta.avatar_url,joined_server_at:j.joined_at},{onConflict:'discord_id',ignoreDuplicates:true});
+  }catch(e){await sb.auth.signOut();return renderLogin('تعذّر التحقق من العضوية، جرّب مرة ثانية.')}}
+ const {data:m}=await sb.from('members').select('discord_id,username,avatar_url,is_admin').eq('discord_id',id).maybeSingle();
+ if(!m){await sb.auth.signOut();return renderLogin('سجّل الدخول من جديد لإكمال التحقق.')}
+ me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000)}
+
+async function load(){
+ const {data:ev}=await sb.from('events').select('*').eq('is_archived',false).order('starts_at');events=ev||[];
+ const {data:w}=await sb.from('winners').select('event_id,place,member_id,members(username,avatar_url)');
+ wins={};(w||[]).forEach(x=>(wins[x.event_id]=wins[x.event_id]||[]).push(x));
+ const {data:rg}=await sb.from('registrations').select('event_id').eq('member_id',me.discord_id).neq('status','cancelled');
+ myRegs=new Set((rg||[]).map(r=>r.event_id))}
 
 function render(){
-  const tabs = [['events','الفعاليات'],['winners','الفائزون']];
-  if(isAdmin) tabs.push(['admin','إدارة']);
-  app.innerHTML = `
-  <header><h1>فعاليات Nexus</h1>
-    <div class="user">${me.avatar_url ? `<img src="${esc(me.avatar_url)}" alt="">` : ''}<span>${esc(me.username)}</span><button class="ghost" onclick="logout()">خروج</button></div></header>
-  ${notice ? `<div class="msg">${esc(notice)}</div>` : ''}
-  <nav>${tabs.map(([k,v]) => `<button class="${tab===k?'on':''}" onclick="go('${k}')">${v}</button>`).join('')}</nav>
-  <div id="view"></div>`;
-  if(tab==='events') viewEvents(); else if(tab==='winners') viewWinners(); else viewAdmin();
-}
-function go(t){ tab = t; notice = ''; render(); }
+ const act=events.filter(e=>!e.ended_at).length,end=events.length-act;
+ const tabs=[['events','النشطة'],['winners','الفائزون']];if(isAdmin)tabs.push(['admin','الإدارة']);
+ app.innerHTML=`<div class="wrap"><div class="hero"><div class="u">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<b>${esc(me.username)}</b><button onclick="logout()">خروج</button></div>
+ <h2>ساحة المنافسة</h2><div class="chips"><span><b>${act}</b>فعالية نشطة</span><span><b>${myRegs.size}</b>تسجيلاتي</span><span><b>${end}</b>منتهية</span></div></div>
+ <nav>${tabs.map(([k,v])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${v}</button>`).join('')}</nav>
+ ${notice?`<div class="msg">${esc(notice)}</div>`:''}<div id="view"></div></div>`;
+ const v=document.getElementById('view');
+ v.innerHTML=tab==='admin'?adminView():listView(tab==='events'?events.filter(e=>!e.ended_at):events.filter(e=>e.ended_at))}
+function go(t){tab=t;notice='';render()}
 
-function left(e){
-  const ms = new Date(e.registration_closes_at) - Date.now();
-  if(ms <= 0) return null;
-  const s = Math.floor(ms/1000), d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), x = s%60;
-  return (d ? d+' يوم ' : '') + [h,m,x].map(n => String(n).padStart(2,'0')).join(':');
-}
-function viewEvents(){
-  const v = document.getElementById('view');
-  if(!events.length){ v.innerHTML = '<div class="card muted">ما في فعاليات حالياً. ارجع قريباً.</div>'; return; }
-  v.innerHTML = events.map(e => {
-    const open = left(e) !== null, reg = myRegs.has(e.id);
-    return `<div class="card"><h3>${esc(e.title)}</h3>
-      <div class="muted">${esc(e.description || '')}</div>
-      <div class="muted">موعد الفعالية: ${fmt(e.starts_at)}</div>
-      <div class="row"><span data-close="${e.id}" class="count ${open?'':'closed'}">${open ? 'يقفل التسجيل بعد '+left(e) : 'التسجيل مقفل'}</span>
-      ${reg ? `<button class="ghost" ${open?'':'disabled'} onclick="unreg('${e.id}')">إلغاء التسجيل</button>` : `<button ${open?'':'disabled'} onclick="reg('${e.id}')">سجّل</button>`}</div></div>`;
-  }).join('');
-}
-function tick(){
-  if(tab !== 'events') return;
-  events.forEach(e => {
-    const el = document.querySelector(`[data-close="${e.id}"]`); if(!el) return;
-    const l = left(e);
-    if(l === null && !el.classList.contains('closed')) return render();
-    if(l !== null) el.textContent = 'يقفل التسجيل بعد ' + l;
-  });
-}
-async function reg(id){
-  const {error} = await sb.from('registrations').insert({event_id:id, member_id:me.discord_id});
-  notice = error ? 'ما انسجّل: غالباً التسجيل انقفل أو إنك مسجّل أصلاً.' : 'تم تسجيلك بالفعالية.';
-  await load(); render();
-}
-async function unreg(id){
-  const {error} = await sb.from('registrations').delete().eq('event_id', id).eq('member_id', me.discord_id);
-  notice = error ? 'تعذّر إلغاء التسجيل.' : 'تم إلغاء تسجيلك.';
-  await load(); render();
-}
+function left(e){const ms=new Date(e.registration_closes_at)-Date.now();if(ms<=0)return null;
+ const s=Math.floor(ms/1000),d=Math.floor(s/86400);
+ return(d?d+' يوم ':'')+[Math.floor(s%86400/3600),Math.floor(s%3600/60),s%60].map(pad).join(':')}
 
-async function viewWinners(){
-  const v = document.getElementById('view');
-  const {data} = await sb.from('winners').select('place, members(username,avatar_url), events(title)').order('announced_at', {ascending:false});
-  if(!data || !data.length){ v.innerHTML = '<div class="card muted">لسا ما انعلن عن فائزين.</div>'; return; }
-  const by = {};
-  data.forEach(w => { const t = w.events?.title || 'فعالية'; (by[t] = by[t] || []).push(w); });
-  v.innerHTML = Object.entries(by).map(([t, ws]) => `<div class="card"><h3>${esc(t)}</h3>` +
-    ws.sort((a,b) => a.place-b.place).map(w => `<div class="place"><b>${w.place}</b>${w.members?.avatar_url ? `<img src="${esc(w.members.avatar_url)}" alt="">` : ''}<span>${esc(w.members?.username)}</span></div>`).join('') + '</div>').join('');
-}
+function winHTML(e){const ws=(wins[e.id]||[]).sort((a,b)=>a.place-b.place);
+ if(!ws.length)return'<div class="win muted">انتهت الفعالية.</div>';
+ const won=ws.some(w=>w.member_id===me.discord_id);
+ return`<div class="win">${won?'<div class="done">🏆 مبروك! إنت من الفائزين</div>':'<div class="done">انتهت الفعالية، الفائزون:</div>'}${ws.map(w=>`<div class="w ${w.member_id===me.discord_id?'me':''}"><b>${w.place}</b>${w.members?.avatar_url?`<img src="${esc(w.members.avatar_url)}" alt="">`:''}<span>${esc(w.members?.username)}</span></div>`).join('')}</div>`}
 
-function viewAdmin(){
-  const v = document.getElementById('view');
-  v.innerHTML = `<div class="card"><h3>فعالية جديدة</h3>
-    <label>الاسم</label><input id="a_t">
-    <label>الوصف</label><textarea id="a_d" rows="2"></textarea>
-    <label>موعد الفعالية</label><input id="a_s" type="datetime-local">
-    <label>إغلاق التسجيل</label><input id="a_c" type="datetime-local">
-    <button onclick="addEvent()">إضافة</button></div>
-    <div class="card"><h3>سحب الفائزين</h3>
-    ${events.map(e => `<div class="row"><span>${esc(e.title)}</span><button class="ghost" onclick="draw('${e.id}')">اسحب</button></div>`).join('') || '<span class="muted">ما في فعاليات.</span>'}</div>`;
-}
-async function addEvent(){
-  const t = a_t.value.trim(), s = a_s.value, c = a_c.value;
-  if(!t || !s || !c){ notice = 'عبّي الاسم والموعد ووقت الإغلاق.'; return render(); }
-  const {error} = await sb.from('events').insert({title:t, description:a_d.value, starts_at:new Date(s).toISOString(), registration_closes_at:new Date(c).toISOString(), created_by:me.discord_id});
-  notice = error ? 'تعذّرت الإضافة: ' + error.message : 'انضافت الفعالية.';
-  await load(); tab = error ? 'admin' : 'events'; render();
-}
-async function draw(id){
-  const n = parseInt(prompt('كم فائز؟', '1'), 10); if(!n) return;
-  const {data} = await sb.from('registrations').select('member_id').eq('event_id', id).eq('status','confirmed');
-  if(!data || !data.length){ notice = 'ما في مسجلين.'; return render(); }
-  const pool = data.map(r => r.member_id);
-  for(let i = pool.length-1; i > 0; i--){ const j = Math.floor(Math.random()*(i+1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  const rows = pool.slice(0, n).map((m, i) => ({event_id:id, member_id:m, place:i+1}));
-  const {error} = await sb.from('winners').insert(rows);
-  notice = error ? 'تعذّر السحب: ' + error.message : 'تم السحب.';
-  tab = error ? 'admin' : 'winners'; render();
-}
+function listView(list){
+ if(!list.length)return`<div class="empty">${tab==='events'?'ما في فعاليات نشطة حالياً. ارجع قريباً.':'لسا ما انتهت أي فعالية.'}</div>`;
+ return list.map(e=>{const [tn,col]=TYPES[e.type]||TYPES.draw,open=left(e)!==null,reg=myRegs.has(e.id);
+  return`<div class="card" style="--k:${col}"><div class="top"><span class="tag">${tn}</span><span>${fmt(e.starts_at)}</span></div><h3>${esc(e.title)}</h3><p>${esc(e.description||'')}</p>
+  ${e.ended_at?winHTML(e):`<div class="row"><span data-close="${e.id}" class="cd ${open?'':'x'}">${open?'يقفل التسجيل بعد '+left(e):'التسجيل مقفل'}</span>${reg?`<button class="btn g" ${open?'':'disabled'} onclick="unreg('${e.id}')">إلغاء التسجيل</button>`:`<button class="btn" ${open?'':'disabled'} onclick="reg('${e.id}')">سجّل الآن</button>`}</div>`}</div>`}).join('')}
+
+function tick(){if(tab!=='events')return;
+ events.forEach(e=>{const el=document.querySelector(`[data-close="${e.id}"]`);if(!el||e.ended_at)return;const l=left(e);
+  if(l===null&&!el.classList.contains('x'))return render();if(l!==null)el.textContent='يقفل التسجيل بعد '+l})}
+
+async function reg(id){const {error}=await sb.from('registrations').insert({event_id:id,member_id:me.discord_id});
+ notice=error?'ما انسجّل: غالباً التسجيل انقفل أو إنك مسجّل أصلاً.':'تم تسجيلك بنجاح.';await load();render()}
+async function unreg(id){const {error}=await sb.from('registrations').delete().eq('event_id',id).eq('member_id',me.discord_id);
+ notice=error?'تعذّر إلغاء التسجيل.':'تم إلغاء تسجيلك.';await load();render()}
+
+function adminView(){const act=events.filter(e=>!e.ended_at);
+ return`<div class="card"><h3>فعالية جديدة</h3>
+ <label>النوع</label><select id="a_y">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>
+ <label>الاسم</label><input id="a_t"><label>الوصف</label><textarea id="a_d" rows="2"></textarea>
+ <label>موعد الفعالية</label><input id="a_s" type="datetime-local"><label>إغلاق التسجيل</label><input id="a_c" type="datetime-local">
+ <div class="row"><button class="btn" onclick="addEvent()">إضافة الفعالية</button></div></div>
+ <div class="card"><h3>إنهاء وسحب الفائزين</h3><p>السحب بينهي الفعالية ويقفل التسجيل فيها.</p>
+ ${act.map(e=>`<div class="row"><span>${esc(e.title)}</span><button class="btn" onclick="draw('${e.id}')">اسحب وأنهِ</button></div>`).join('')||'<p>ما في فعاليات نشطة.</p>'}</div>`}
+
+async function addEvent(){const t=a_t.value.trim(),s=a_s.value,c=a_c.value;
+ if(!t||!s||!c){notice='عبّي الاسم والموعد ووقت الإغلاق.';return render()}
+ const {error}=await sb.from('events').insert({title:t,type:a_y.value,description:a_d.value,starts_at:new Date(s).toISOString(),registration_closes_at:new Date(c).toISOString(),created_by:me.discord_id});
+ notice=error?'تعذّرت الإضافة: '+error.message:'انضافت الفعالية.';await load();tab=error?'admin':'events';render()}
+
+async function draw(id){const n=parseInt(prompt('كم عدد الفائزين؟','1'),10);if(!n)return;
+ const e=events.find(x=>x.id===id);
+ const {data}=await sb.from('registrations').select('member_id').eq('event_id',id).eq('status','confirmed');
+ if(!data||!data.length){notice='ما في مسجلين بهالفعالية.';return render()}
+ const pool=data.map(r=>r.member_id);
+ for(let i=pool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[pool[i],pool[j]]=[pool[j],pool[i]]}
+ const ids=pool.slice(0,n);
+ const {error}=await sb.from('winners').insert(ids.map((m,i)=>({event_id:id,member_id:m,place:i+1})));
+ if(error){notice='تعذّر السحب: '+error.message;return render()}
+ const now=Date.now();
+ await sb.from('events').update({ended_at:new Date(now).toISOString(),registration_closes_at:new Date(Math.min(now,+new Date(e.registration_closes_at))).toISOString()}).eq('id',id);
+ const {data:ms}=await sb.from('members').select('discord_id,username').in('discord_id',ids);
+ await load();tab='winners';render();
+ const nm=ids.map(i=>ms?.find(m=>m.discord_id===i)?.username||'عضو');
+ const o=document.createElement('div');o.id='reveal';o.onclick=()=>o.remove();
+ o.innerHTML=`<h2>🏆 الفائزون</h2><div class="small" style="color:var(--m)">${esc(e.title)}</div>`+nm.map((x,i)=>`<div class="n" style="animation-delay:${.8+i*.7}s">${i+1}. ${esc(x)}</div>`).join('')+'<small>اضغط للإغلاق</small>';
+ document.body.appendChild(o)}
 
 init();
 </script>

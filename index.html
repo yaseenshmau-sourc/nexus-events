@@ -66,6 +66,13 @@ nav button.on{background:linear-gradient(135deg,var(--b),#1b4fd0);color:#fff;box
 label{display:block;font-size:14px;color:var(--m);margin-top:10px}
 input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;border-radius:10px;padding:10px;color:var(--t);font:inherit;margin-top:4px}
 .opt{display:block;width:100%;margin-top:8px;text-align:right}.bar2{height:6px;background:#12203f;border-radius:6px;margin:4px 0 8px;overflow:hidden}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--b),var(--c))}
+.sec{position:static}.sec button{font:20px Lalezar;padding:14px}.sec button.on{background:linear-gradient(135deg,var(--b),#1b4fd0);color:#fff}
+.vc{position:relative;aspect-ratio:1.586;border-radius:20px;padding:18px;display:flex;flex-direction:column;justify-content:space-between;color:#fff;box-shadow:0 14px 40px #000a;overflow:hidden;background:linear-gradient(135deg,var(--k),#050a1a);margin-bottom:14px}
+.vc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff22 50%,transparent 60%);pointer-events:none}
+.vc .t,.vc .b{display:flex;align-items:center;gap:10px;justify-content:space-between}.vc .no{font:26px/1 monospace;letter-spacing:3px;direction:ltr;text-align:center}
+.vc .b img{width:38px;height:38px;border-radius:50%;border:2px solid #fff8}
+.lg{height:34px;max-width:120px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;color:#111}
+.bk{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.bk button{background:var(--s2);border:2px solid transparent;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700}.bk button.on{border-color:var(--c)}
 .empty{text-align:center;color:var(--m);padding:40px 10px}
 #reveal{position:fixed;inset:0;z-index:40;background:radial-gradient(circle,#1a2f66ee,#02040aee);display:grid;place-content:center;text-align:center;padding:20px}
 #reveal h2{font-size:46px;color:var(--g);text-shadow:0 0 40px var(--g);animation:rise .8s both}
@@ -83,7 +90,7 @@ input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;bor
 const FIRE=[195,32]; /* درجة لون النار: للون برتقالي غيّرها إلى [12,40] */
 const TYPES={draw:['سحب','#3fd0ff'],contest:['مسابقة','#2f7bff'],vote:['تصويت','#b06bff'],tournament:['بطولة','#ff3b4e']};
 const app=document.getElementById('app');
-let sb,me,isAdmin=false,tab='events',events=[],wins={},votes=[],myRegs=new Set(),notice='';
+let bal=null,ords=[],sec='events',bt='me',acct=null,items=[],purch=[],pbk='',sb,me,isAdmin=false,tab='events',events=[],wins={},votes=[],counts={},board=[],logs=[],myRegs=new Set(),notice='';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>new Date(d).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'});
 const pad=n=>String(n).padStart(2,'0');
@@ -135,18 +142,26 @@ async function load(){
  const {data:w}=await sb.from('winners').select('event_id,place,member_id,members(username,avatar_url)');
  wins={};(w||[]).forEach(x=>(wins[x.event_id]=wins[x.event_id]||[]).push(x));
  const {data:vt}=await sb.from('votes').select('event_id,choice,voter_id');votes=vt||[];
- const {data:rg}=await sb.from('registrations').select('event_id').eq('member_id',me.discord_id).neq('status','cancelled');
- myRegs=new Set((rg||[]).map(r=>r.event_id))}
+ const {data:ct}=await sb.rpc('event_counts');counts={};(ct||[]).forEach(c=>counts[c.event_id]=c);
+ const {data:bd}=await sb.from('members').select('username,avatar_url,points').order('points',{ascending:false}).limit(10);board=bd||[];
+ const {data:mm}=await sb.from('members').select('points').eq('discord_id',me.discord_id).maybeSingle();if(mm)me.points=mm.points;
+ if(isAdmin){const {data:lg}=await sb.from('audit_log').select('action,created_at,members(username)').order('created_at',{ascending:false}).limit(15);logs=lg||[]}
+ const {data:ac}=await sb.from('bank_accounts').select('*').eq('member_id',me.discord_id).maybeSingle();acct=ac;
+ const {data:it}=await sb.from('store_items').select('*').eq('active',true).order('price');items=it||[];
+ const {data:bb}=await sb.from('bot_balances').select('*').eq('discord_id',me.discord_id).maybeSingle();bal=bb;
+ const {data:od}=await sb.from('web_orders').select('kind,item,amount,status,result,created_at,member_id,members(username)').order('created_at',{ascending:false}).limit(20);ords=od||[];
+ const {data:rg}=await sb.from('registrations').select('event_id,status').eq('member_id',me.discord_id).neq('status','cancelled');
+ myRegs=new Map((rg||[]).map(r=>[r.event_id,r.status]))}
 
 function render(){
  const act=events.filter(e=>!e.ended_at).length,end=events.length-act;
- const tabs=[['events','النشطة'],['winners','الفائزون']];if(isAdmin)tabs.push(['admin','الإدارة']);
+ const tabs=[['events','النشطة'],['winners','الفائزون'],['rank','الترتيب']];if(isAdmin)tabs.push(['admin','الإدارة']);
  app.innerHTML=`<div class="wrap"><div class="hero"><div class="u">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<b>${esc(me.username)}</b><button onclick="logout()">خروج</button></div>
  <h2>ساحة المنافسة</h2><div class="chips"><span><b>${act}</b>فعالية نشطة</span><span><b>${myRegs.size}</b>تسجيلاتي</span><span><b>${end}</b>منتهية</span></div></div>
- <nav>${tabs.map(([k,v])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${v}</button>`).join('')}</nav>
+ <nav class="sec"><button class="${sec==='events'?'on':''}" onclick="sec='events';notice='';render()">الفعاليات</button><button class="${sec==='bank'?'on':''}" onclick="sec='bank';notice='';render()">🏦 البنك</button></nav>${sec==='events'?`<nav>${tabs.map(([k,v])=>`<button class="${tab===k?'on':''}" onclick="go('${k}')">${v}</button>`).join('')}</nav>`:''}
  ${notice?`<div class="msg">${esc(notice)}</div>`:''}<div id="view"></div></div>`;
  const v=document.getElementById('view');
- v.innerHTML=tab==='admin'?adminView():listView(tab==='events'?events.filter(e=>!e.ended_at):events.filter(e=>e.ended_at))}
+ v.innerHTML=sec==='bank'?bankView():tab==='admin'?adminView():tab==='rank'?rankView():listView(tab==='events'?events.filter(e=>!e.ended_at):events.filter(e=>e.ended_at))}
 function go(t){tab=t;notice='';render()}
 
 function left(e){const ms=new Date(e.registration_closes_at)-Date.now();if(ms<=0)return null;
@@ -161,8 +176,8 @@ function winHTML(e){const ws=(wins[e.id]||[]).sort((a,b)=>a.place-b.place);
 function listView(list){
  if(!list.length)return`<div class="empty">${tab==='events'?'ما في فعاليات نشطة حالياً. ارجع قريباً.':'لسا ما انتهت أي فعالية.'}</div>`;
  return list.map(e=>{const [tn,col]=TYPES[e.type]||TYPES.draw,open=left(e)!==null,reg=myRegs.has(e.id);
-  return`<div class="card" style="--k:${col}"><div class="top"><span class="tag">${tn}</span><span>${fmt(e.starts_at)}</span></div><h3>${esc(e.title)}</h3><p>${esc(e.description||'')}</p>
-  ${e.type==='vote'?voteHTML(e,open):e.ended_at?winHTML(e):`<div class="row"><span data-close="${e.id}" class="cd ${open?'':'x'}">${open?'يقفل التسجيل بعد '+left(e):'التسجيل مقفل'}</span>${reg?`<button class="btn g" ${open?'':'disabled'} onclick="unreg('${e.id}')">إلغاء التسجيل</button>`:`<button class="btn" ${open?'':'disabled'} onclick="reg('${e.id}')">سجّل الآن</button>`}</div>`}</div>`}).join('')}
+  return`<div class="card" style="--k:${col}"><div class="top"><span class="tag">${tn}</span><span>${fmt(e.starts_at)}</span></div><h3>${esc(e.title)}</h3><p>${esc(e.description||'')}</p>${e.type==='vote'?'':`<div class="muted" style="margin-top:6px">👥 ${cntTxt(e)}</div>`}
+  ${e.type==='vote'?voteHTML(e,open):e.ended_at?winHTML(e):`<div class="row"><span data-close="${e.id}" class="cd ${open?'':'x'}">${open?'يقفل التسجيل بعد '+left(e):'التسجيل مقفل'}</span>${reg?`<button class="btn g" ${open?'':'disabled'} onclick="unreg('${e.id}')">${myRegs.get(e.id)==='waitlist'?'إلغاء (قائمة الانتظار)':'إلغاء التسجيل'}</button>`:`<button class="btn" ${open?'':'disabled'} onclick="reg('${e.id}')">${full(e)?'انضم لقائمة الانتظار':'سجّل الآن'}</button>`}</div>`}</div>`}).join('')}
 
 function voteHTML(e,open){const o=e.options||[],vs=votes.filter(v=>v.event_id===e.id),mine=vs.find(v=>v.voter_id===me.discord_id);
  if(e.ended_at){const c=o.map((_,i)=>vs.filter(v=>v.choice===i).length),mx=Math.max(...c,1),tot=vs.length||1;
@@ -172,37 +187,71 @@ function voteHTML(e,open){const o=e.options||[],vs=votes.filter(v=>v.event_id===
  return`<div class="win"><span class="cd" data-v="1" data-close="${e.id}">يقفل التصويت بعد ${left(e)}</span>${o.map((t,i)=>`<button class="btn g opt" onclick="castVote('${e.id}',${i})">${esc(t)}</button>`).join('')}</div>`}
 async function castVote(id,i){const {error}=await sb.from('votes').insert({event_id:id,voter_id:me.discord_id,choice:i});
  notice=error?'ما انحسب صوتك: غالباً التصويت انقفل أو صوّتت قبل.':'تم تسجيل صوتك.';await load();render()}
+const CUR='🪙';const wal=()=>bal?.coins||0,bnk=()=>bal?.bank||0;
+const BANKS={pal:['بنك فلسطين','bank-pal.png','#0d7a45'],ahli:['البنك الأهلي','bank-ahli.png','#1b4fd0'],arab:['البنك العربي','bank-arab.png','#7a1f2b'],quds:['بنك القدس','bank-quds.png','#0f5a8a']};
+const logo=k=>`<img class="lg" src="${BANKS[k][1]}" alt="${BANKS[k][0]}" onerror="this.outerHTML='<b>${BANKS[k][0]}</b>'">`;
+const money=n=>Number(n).toLocaleString('en')+' '+CUR;
+function bankView(){
+ const sub=`<nav>${[['me','حسابي'],['shop','المتجر']].concat(isAdmin?[['adm','إدارة البنك']]:[]).map(([k,v])=>`<button class="${bt===k?'on':''}" onclick="bt='${k}';render()">${v}</button>`).join('')}</nav>`;
+ if(bt==='adm'&&isAdmin)return sub+bankAdmin();
+ if(!acct)return sub+openForm();
+ return sub+(bt==='shop'?shopView():cardView())}
+function openForm(){return`<div class="card"><h3>فتح حساب بنكي</h3><label>الاسم</label><input id="b_n"><label>تاريخ الميلاد</label><input id="b_d" type="date"><label>الدولة</label><input id="b_c"><label>اختر البنك</label>
+ <div class="bk">${Object.entries(BANKS).map(([k,v])=>`<button class="${pbk===k?'on':''}" onclick="pickBank('${k}',this)">${logo(k)}<span>${v[0]}</span></button>`).join('')}</div><div class="row"><button class="btn" onclick="openAcct()">فتح الحساب</button></div></div>`}
+function pickBank(k,el){pbk=k;document.querySelectorAll('.bk button').forEach(b=>b.classList.remove('on'));el.classList.add('on')}
+async function openAcct(){const n=b_n.value.trim(),d=b_d.value,c=b_c.value.trim();if(!n||!d||!c||!pbk){notice='عبّي كل الخانات واختر بنك.';return render()}
+ const {error}=await sb.rpc('open_account',{n,b:d,c,bk:pbk});notice=error?'تعذّر فتح الحساب: '+error.message:'انفتح حسابك، هاي بطاقتك.';await load();render()}
+function cardView(){const bk=BANKS[acct.bank],no=acct.card_no.replace(/(\d{3})(?=\d)/g,'$1 ');
+ return`<div class="vc" style="--k:${bk[2]}"><div class="t">${logo(acct.bank)}<b style="font:italic 700 26px Tajawal">VISA</b></div><div class="no">${no}</div><div class="b">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<div style="flex:1"><b>${esc(acct.full_name)}</b><div style="font-size:13px;opacity:.8">${bk[0]}</div></div><div><small>المحفظة</small><div style="font:24px Lalezar">${money(wal())}</div><small>البنك: ${money(bnk())}</small></div></div></div>
+ <div class="card"><h3>مشترياتي</h3>${ords.filter(o=>o.member_id===me.discord_id&&o.kind==='buy').slice(0,6).map(o=>`<div class="row" style="margin:6px 0"><span>${esc(o.item)}</span><span class="muted">${o.status==='done'?'✓ تم':o.status==='pending'?'قيد التنفيذ…':esc(o.result||'فشل')}</span></div>`).join('')||'<p>ما في مشتريات.</p>'}</div>`}
+function shopView(){if(!acct)return openForm();
+ const lo=ords.find(o=>o.member_id===me.discord_id&&o.kind==='buy');return`<div class="msg">محفظتك: ${money(wal())}${lo?` · آخر طلب: ${lo.status==='pending'?'قيد التنفيذ…':esc(lo.result||'')}`:''}</div>`+(items.map(i=>`<div class="card"><h3>${esc(i.name)}</h3><p>${esc(i.description||'')}</p><div class="row"><b class="cd">${money(i.price)}</b><button class="btn" ${i.stock===0||wal()<i.price?'disabled':''} onclick="buy('${i.id}')">${i.stock===0?'نفذت الكمية':'اشتر'}</button></div></div>`).join('')||'<div class="empty">المتجر فاضي حالياً.</div>')}
+async function buy(id){if(!confirm('تأكيد الشراء؟'))return;const {error}=await sb.rpc('buy_item',{iid:id});notice=error?'تعذّر الشراء: '+error.message:'تم إرسال طلبك للسيرفر، بيتنفذ خلال ثواني.';await load();render();if(!error)setTimeout(async()=>{await load();render()},20000)}
+function bankAdmin(){return`<div class="card"><h3>شحن أو خصم رصيد</h3><label>Discord ID للعضو</label><input id="c_m"><label>المبلغ (سالب للخصم)</label><input id="c_a" type="number"><div class="row"><button class="btn" onclick="credit()">تنفيذ</button></div></div>
+ <div class="card"><h3>المتجر</h3><p>المنتجات بتتزامن تلقائياً من قائمة SHOP بالبوت.</p></div>
+ <div class="card"><h3>آخر الطلبات</h3>${ords.map(p=>`<div class="muted">${fmt(p.created_at)} · ${esc(p.members?.username)} · ${p.kind} ${esc(p.item||p.amount||'')} · ${p.status}</div>`).join('')||'<p>فاضي.</p>'}</div>`}
+async function addItem(){const n=i_n.value.trim(),p=+i_p.value;if(!n||!(p>0)){notice='عبّي الاسم والسعر.';return render()}
+ const {error}=await sb.from('store_items').insert({name:n,description:i_d.value,price:p,stock:i_s.value===''?null:+i_s.value});notice=error?'تعذّرت الإضافة: '+error.message:'انضاف المنتج.';await load();render()}
+async function delItem(id){if(!confirm('حذف المنتج؟'))return;await sb.from('store_items').update({active:false}).eq('id',id);await load();render()}
+async function credit(){const m=c_m.value.trim(),a=+c_a.value;if(!m||!a){notice='عبّي ID العضو والمبلغ.';return render()}
+ const {error}=await sb.rpc('admin_credit',{mid:m,amt:a});if(!error)log('رصيد '+a+' للعضو '+m);notice=error?'تعذّر: '+error.message:'تم تنفيذ العملية.';await load();render()}
 function tick(){if(tab!=='events')return;
  events.forEach(e=>{const el=document.querySelector(`[data-close="${e.id}"]`);if(!el||e.ended_at)return;const l=left(e);
   if(l===null&&!el.classList.contains('x'))return render();if(l!==null)el.textContent=(el.dataset.v?'يقفل التصويت بعد ':'يقفل التسجيل بعد ')+l})}
 
-async function reg(id){const {error}=await sb.from('registrations').insert({event_id:id,member_id:me.discord_id});
- notice=error?'ما انسجّل: غالباً التسجيل انقفل أو إنك مسجّل أصلاً.':'تم تسجيلك بنجاح.';await load();render()}
+const cntTxt=e=>{const c=counts[e.id]||{confirmed:0,waitlist:0};return c.confirmed+(e.max_participants?' / '+e.max_participants:'')+' مسجل'+(c.waitlist?` (+${c.waitlist} انتظار)`:'')};
+const full=e=>e.max_participants&&(counts[e.id]?.confirmed||0)>=e.max_participants;
+async function log(a,t){await sb.from('audit_log').insert({admin_id:me.discord_id,action:a,target_type:'event',target_id:t||null})}
+async function reg(id){const {data,error}=await sb.rpc('register_event',{eid:id});
+ notice=error?'ما انسجّل: غالباً التسجيل انقفل أو إنك مسجّل أصلاً.':data==='waitlist'?'الفعالية ممتلئة، انضفت لقائمة الانتظار.':'تم تسجيلك بنجاح.';await load();render()}
+function rankView(){const w=Object.values(wins).flat().filter(x=>x.member_id===me.discord_id).length;
+ return`<div class="card" style="--k:#ffcf5a"><h3>ملفي</h3><div class="chips" style="margin-top:10px"><span><b>${me.points||0}</b>نقطة</span><span><b>${w}</b>فوز</span><span><b>${myRegs.size}</b>تسجيل نشط</span></div></div><div class="card"><h3>المتصدرون</h3>${board.map((m,i)=>`<div class="w ${m.username===me.username?'me':''}"><b>${i+1}</b>${m.avatar_url?`<img src="${esc(m.avatar_url)}" alt="">`:''}<span style="flex:1">${esc(m.username)}</span><b>${m.points}</b></div>`).join('')||'<p>لسا ما في نقاط.</p>'}</div>`}
 async function unreg(id){const {error}=await sb.from('registrations').delete().eq('event_id',id).eq('member_id',me.discord_id);
  notice=error?'تعذّر إلغاء التسجيل.':'تم إلغاء تسجيلك.';await load();render()}
 
 function adminView(){const act=events.filter(e=>!e.ended_at);
  return`<div class="card"><h3>فعالية جديدة</h3>
  <label>النوع</label><select id="a_y" onchange="opts.style.display=this.value==='vote'?'block':'none'">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>
- <label>الاسم</label><input id="a_t"><label>الوصف</label><textarea id="a_d" rows="2"></textarea><div id="opts" style="display:none">${[1,2,3,4].map(n=>`<label>الخيار ${n}</label><input class="a_o">`).join('')}</div>
- <label>موعد الفعالية</label><input id="a_s" type="datetime-local"><label>إغلاق التسجيل</label><input id="a_c" type="datetime-local">
+ <label>الاسم</label><input id="a_t"><label>الوصف</label><textarea id="a_d" rows="2"></textarea><div id="opts" style="display:none">${[1,2,3,4].map(n=>`<label>الخيار ${n}${n>2?' (اختياري)':''}</label><input class="a_o">`).join('')}</div>
+ <label>موعد الفعالية</label><input id="a_s" type="datetime-local"><label>إغلاق التسجيل</label><input id="a_c" type="datetime-local"><label>أقصى عدد مشاركين (فاضي = بلا حد)</label><input id="a_m" type="number" min="1">
  <div class="row"><button class="btn" onclick="addEvent()">إضافة الفعالية</button></div></div>
  <div class="card"><h3>إدارة الفعاليات</h3><p>السحب أو إنهاء التصويت بيقفل الفعالية.</p>
  ${events.map(e=>`<div class="row"><span>${esc(e.title)}${e.ended_at?' (منتهية)':''}</span><span>${!e.ended_at?`<button class="btn" onclick="${e.type==='vote'?'endVote':'draw'}('${e.id}')">${e.type==='vote'?'أنهِ التصويت':'اسحب وأنهِ'}</button> `:''}<button class="btn g" onclick="delEvent('${e.id}')">حذف</button></span></div>`).join('')||'<p>ما في فعاليات.</p>'}</div>
+ <div class="card"><h3>سجل النشاط</h3>${logs.map(l=>`<div class="muted">${fmt(l.created_at)} · ${esc(l.members?.username)} · ${esc(l.action)}</div>`).join('')||'<p>فاضي.</p>'}</div>
  <div class="card"><h3>منطقة الخطر</h3><p>بيمسح كل الفعاليات والتسجيلات والأصوات والفائزين.</p><div class="row"><button class="btn g" style="color:var(--r)" onclick="wipeAll()">مسح كل السجلات</button></div></div>`}
 
-async function addEvent(){const t=a_t.value.trim(),s=a_s.value,c=a_c.value,ops=[...document.querySelectorAll('.a_o')].map(x=>x.value.trim());
- if(!t||!s||!c||(a_y.value==='vote'&&ops.some(x=>!x))){notice='عبّي كل الخانات (وخيارات التصويت الأربعة).';return render()}
- const {error}=await sb.from('events').insert({title:t,type:a_y.value,description:a_d.value,starts_at:new Date(s).toISOString(),registration_closes_at:new Date(c).toISOString(),created_by:me.discord_id,options:a_y.value==='vote'?ops:null});
- notice=error?'تعذّرت الإضافة: '+error.message:'انضافت الفعالية.';await load();tab=error?'admin':'events';render()}
+async function addEvent(){const t=a_t.value.trim(),s=a_s.value,c=a_c.value,ops=[...document.querySelectorAll('.a_o')].map(x=>x.value.trim()).filter(Boolean);
+ if(!t||!s||!c||(a_y.value==='vote'&&ops.length<2)){notice='عبّي كل الخانات (وخياران على الأقل للتصويت).';return render()}
+ const {error}=await sb.from('events').insert({title:t,type:a_y.value,description:a_d.value,starts_at:new Date(s).toISOString(),registration_closes_at:new Date(c).toISOString(),created_by:me.discord_id,options:a_y.value==='vote'?ops:null,max_participants:a_m.value?+a_m.value:null});
+ if(!error)log('إضافة فعالية: '+t);notice=error?'تعذّرت الإضافة: '+error.message:'انضافت الفعالية.';await load();tab=error?'admin':'events';render()}
 
 async function endVote(id){if(!confirm('إنهاء التصويت؟'))return;const e=events.find(x=>x.id===id),now=Date.now();
  const {error}=await sb.from('events').update({ended_at:new Date(now).toISOString(),registration_closes_at:new Date(Math.min(now,+new Date(e.registration_closes_at))).toISOString()}).eq('id',id);
- notice=error?'تعذّر الإنهاء.':'انتهى التصويت، النتيجة بتبويب الفائزون.';await load();tab=error?'admin':'winners';render()}
+ if(!error)log('إنهاء تصويت',id);notice=error?'تعذّر الإنهاء.':'انتهى التصويت، النتيجة بتبويب الفائزون.';await load();tab=error?'admin':'winners';render()}
 async function delEvent(id){if(!confirm('حذف الفعالية وكل تسجيلاتها؟'))return;
- const {error}=await sb.from('events').delete().eq('id',id);notice=error?'تعذّر الحذف: '+error.message:'انحذفت الفعالية.';await load();render()}
+ const {error}=await sb.from('events').delete().eq('id',id);if(!error)log('حذف فعالية',id);notice=error?'تعذّر الحذف: '+error.message:'انحذفت الفعالية.';await load();render()}
 async function wipeAll(){if(prompt('للتأكيد اكتب كلمة: مسح')!=='مسح')return;
- const {error}=await sb.from('events').delete().neq('id','00000000-0000-0000-0000-000000000000');notice=error?'تعذّر المسح: '+error.message:'انمسحت كل السجلات.';await load();render()}
+ const {error}=await sb.from('events').delete().neq('id','00000000-0000-0000-0000-000000000000');if(!error)log('مسح كل السجلات');notice=error?'تعذّر المسح: '+error.message:'انمسحت كل السجلات.';await load();render()}
 async function draw(id){const n=parseInt(prompt('كم عدد الفائزين؟','1'),10);if(!n)return;
  const e=events.find(x=>x.id===id);
  const {data}=await sb.from('registrations').select('member_id').eq('event_id',id).eq('status','confirmed');
@@ -214,6 +263,7 @@ async function draw(id){const n=parseInt(prompt('كم عدد الفائزين؟'
  if(error){notice='تعذّر السحب: '+error.message;return render()}
  const now=Date.now();
  await sb.from('events').update({ended_at:new Date(now).toISOString(),registration_closes_at:new Date(Math.min(now,+new Date(e.registration_closes_at))).toISOString()}).eq('id',id);
+ await sb.rpc('add_points',{ids:pool,pts:5});await sb.rpc('add_points',{ids:ids.slice(0,1),pts:50});if(ids.length>1)await sb.rpc('add_points',{ids:ids.slice(1),pts:25});log('سحب فائزين: '+e.title,id);
  const {data:ms}=await sb.from('members').select('discord_id,username').in('discord_id',ids);
  await load();tab='winners';render();
  const nm=ids.map(i=>ms?.find(m=>m.discord_id===i)?.username||'عضو');

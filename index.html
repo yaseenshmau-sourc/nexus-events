@@ -65,6 +65,7 @@ nav button.on{background:linear-gradient(135deg,var(--b),#1b4fd0);color:#fff;box
 .done{color:var(--g);font-weight:700}
 label{display:block;font-size:14px;color:var(--m);margin-top:10px}
 input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;border-radius:10px;padding:10px;color:var(--t);font:inherit;margin-top:4px}
+.opt{display:block;width:100%;margin-top:8px;text-align:right}.bar2{height:6px;background:#12203f;border-radius:6px;margin:4px 0 8px;overflow:hidden}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--b),var(--c))}
 .empty{text-align:center;color:var(--m);padding:40px 10px}
 #reveal{position:fixed;inset:0;z-index:40;background:radial-gradient(circle,#1a2f66ee,#02040aee);display:grid;place-content:center;text-align:center;padding:20px}
 #reveal h2{font-size:46px;color:var(--g);text-shadow:0 0 40px var(--g);animation:rise .8s both}
@@ -82,7 +83,7 @@ input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;bor
 const FIRE=[195,32]; /* درجة لون النار: للون برتقالي غيّرها إلى [12,40] */
 const TYPES={draw:['سحب','#3fd0ff'],contest:['مسابقة','#2f7bff'],vote:['تصويت','#b06bff'],tournament:['بطولة','#ff3b4e']};
 const app=document.getElementById('app');
-let sb,me,isAdmin=false,tab='events',events=[],wins={},myRegs=new Set(),notice='';
+let sb,me,isAdmin=false,tab='events',events=[],wins={},votes=[],myRegs=new Set(),notice='';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>new Date(d).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'});
 const pad=n=>String(n).padStart(2,'0');
@@ -133,6 +134,7 @@ async function load(){
  const {data:ev}=await sb.from('events').select('*').eq('is_archived',false).order('starts_at');events=ev||[];
  const {data:w}=await sb.from('winners').select('event_id,place,member_id,members(username,avatar_url)');
  wins={};(w||[]).forEach(x=>(wins[x.event_id]=wins[x.event_id]||[]).push(x));
+ const {data:vt}=await sb.from('votes').select('event_id,choice,voter_id');votes=vt||[];
  const {data:rg}=await sb.from('registrations').select('event_id').eq('member_id',me.discord_id).neq('status','cancelled');
  myRegs=new Set((rg||[]).map(r=>r.event_id))}
 
@@ -160,11 +162,19 @@ function listView(list){
  if(!list.length)return`<div class="empty">${tab==='events'?'ما في فعاليات نشطة حالياً. ارجع قريباً.':'لسا ما انتهت أي فعالية.'}</div>`;
  return list.map(e=>{const [tn,col]=TYPES[e.type]||TYPES.draw,open=left(e)!==null,reg=myRegs.has(e.id);
   return`<div class="card" style="--k:${col}"><div class="top"><span class="tag">${tn}</span><span>${fmt(e.starts_at)}</span></div><h3>${esc(e.title)}</h3><p>${esc(e.description||'')}</p>
-  ${e.ended_at?winHTML(e):`<div class="row"><span data-close="${e.id}" class="cd ${open?'':'x'}">${open?'يقفل التسجيل بعد '+left(e):'التسجيل مقفل'}</span>${reg?`<button class="btn g" ${open?'':'disabled'} onclick="unreg('${e.id}')">إلغاء التسجيل</button>`:`<button class="btn" ${open?'':'disabled'} onclick="reg('${e.id}')">سجّل الآن</button>`}</div>`}</div>`}).join('')}
+  ${e.type==='vote'?voteHTML(e,open):e.ended_at?winHTML(e):`<div class="row"><span data-close="${e.id}" class="cd ${open?'':'x'}">${open?'يقفل التسجيل بعد '+left(e):'التسجيل مقفل'}</span>${reg?`<button class="btn g" ${open?'':'disabled'} onclick="unreg('${e.id}')">إلغاء التسجيل</button>`:`<button class="btn" ${open?'':'disabled'} onclick="reg('${e.id}')">سجّل الآن</button>`}</div>`}</div>`}).join('')}
 
+function voteHTML(e,open){const o=e.options||[],vs=votes.filter(v=>v.event_id===e.id),mine=vs.find(v=>v.voter_id===me.discord_id);
+ if(e.ended_at){const c=o.map((_,i)=>vs.filter(v=>v.choice===i).length),mx=Math.max(...c,1),tot=vs.length||1;
+  return`<div class="win"><div class="done">انتهى التصويت، النتيجة:</div>${o.map((t,i)=>`<div class="w ${c[i]===mx&&c[i]>0?'me':''}" style="display:block"><div class="row" style="margin:0"><span>${esc(t)}</span><b>${c[i]} (${Math.round(c[i]/tot*100)}%)</b></div><div class="bar2"><i style="width:${c[i]/tot*100}%"></i></div></div>`).join('')}</div>`}
+ if(mine)return`<div class="win"><div class="done">تم تسجيل صوتك: ${esc(o[mine.choice])}</div></div>`;
+ if(!open)return'<div class="win"><span class="cd x">التصويت مقفل</span></div>';
+ return`<div class="win"><span class="cd" data-v="1" data-close="${e.id}">يقفل التصويت بعد ${left(e)}</span>${o.map((t,i)=>`<button class="btn g opt" onclick="castVote('${e.id}',${i})">${esc(t)}</button>`).join('')}</div>`}
+async function castVote(id,i){const {error}=await sb.from('votes').insert({event_id:id,voter_id:me.discord_id,choice:i});
+ notice=error?'ما انحسب صوتك: غالباً التصويت انقفل أو صوّتت قبل.':'تم تسجيل صوتك.';await load();render()}
 function tick(){if(tab!=='events')return;
  events.forEach(e=>{const el=document.querySelector(`[data-close="${e.id}"]`);if(!el||e.ended_at)return;const l=left(e);
-  if(l===null&&!el.classList.contains('x'))return render();if(l!==null)el.textContent='يقفل التسجيل بعد '+l})}
+  if(l===null&&!el.classList.contains('x'))return render();if(l!==null)el.textContent=(el.dataset.v?'يقفل التصويت بعد ':'يقفل التسجيل بعد ')+l})}
 
 async function reg(id){const {error}=await sb.from('registrations').insert({event_id:id,member_id:me.discord_id});
  notice=error?'ما انسجّل: غالباً التسجيل انقفل أو إنك مسجّل أصلاً.':'تم تسجيلك بنجاح.';await load();render()}
@@ -173,18 +183,26 @@ async function unreg(id){const {error}=await sb.from('registrations').delete().e
 
 function adminView(){const act=events.filter(e=>!e.ended_at);
  return`<div class="card"><h3>فعالية جديدة</h3>
- <label>النوع</label><select id="a_y">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>
- <label>الاسم</label><input id="a_t"><label>الوصف</label><textarea id="a_d" rows="2"></textarea>
+ <label>النوع</label><select id="a_y" onchange="opts.style.display=this.value==='vote'?'block':'none'">${Object.entries(TYPES).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select>
+ <label>الاسم</label><input id="a_t"><label>الوصف</label><textarea id="a_d" rows="2"></textarea><div id="opts" style="display:none">${[1,2,3,4].map(n=>`<label>الخيار ${n}</label><input class="a_o">`).join('')}</div>
  <label>موعد الفعالية</label><input id="a_s" type="datetime-local"><label>إغلاق التسجيل</label><input id="a_c" type="datetime-local">
  <div class="row"><button class="btn" onclick="addEvent()">إضافة الفعالية</button></div></div>
- <div class="card"><h3>إنهاء وسحب الفائزين</h3><p>السحب بينهي الفعالية ويقفل التسجيل فيها.</p>
- ${act.map(e=>`<div class="row"><span>${esc(e.title)}</span><button class="btn" onclick="draw('${e.id}')">اسحب وأنهِ</button></div>`).join('')||'<p>ما في فعاليات نشطة.</p>'}</div>`}
+ <div class="card"><h3>إدارة الفعاليات</h3><p>السحب أو إنهاء التصويت بيقفل الفعالية.</p>
+ ${events.map(e=>`<div class="row"><span>${esc(e.title)}${e.ended_at?' (منتهية)':''}</span><span>${!e.ended_at?`<button class="btn" onclick="${e.type==='vote'?'endVote':'draw'}('${e.id}')">${e.type==='vote'?'أنهِ التصويت':'اسحب وأنهِ'}</button> `:''}<button class="btn g" onclick="delEvent('${e.id}')">حذف</button></span></div>`).join('')||'<p>ما في فعاليات.</p>'}</div>
+ <div class="card"><h3>منطقة الخطر</h3><p>بيمسح كل الفعاليات والتسجيلات والأصوات والفائزين.</p><div class="row"><button class="btn g" style="color:var(--r)" onclick="wipeAll()">مسح كل السجلات</button></div></div>`}
 
-async function addEvent(){const t=a_t.value.trim(),s=a_s.value,c=a_c.value;
- if(!t||!s||!c){notice='عبّي الاسم والموعد ووقت الإغلاق.';return render()}
- const {error}=await sb.from('events').insert({title:t,type:a_y.value,description:a_d.value,starts_at:new Date(s).toISOString(),registration_closes_at:new Date(c).toISOString(),created_by:me.discord_id});
+async function addEvent(){const t=a_t.value.trim(),s=a_s.value,c=a_c.value,ops=[...document.querySelectorAll('.a_o')].map(x=>x.value.trim());
+ if(!t||!s||!c||(a_y.value==='vote'&&ops.some(x=>!x))){notice='عبّي كل الخانات (وخيارات التصويت الأربعة).';return render()}
+ const {error}=await sb.from('events').insert({title:t,type:a_y.value,description:a_d.value,starts_at:new Date(s).toISOString(),registration_closes_at:new Date(c).toISOString(),created_by:me.discord_id,options:a_y.value==='vote'?ops:null});
  notice=error?'تعذّرت الإضافة: '+error.message:'انضافت الفعالية.';await load();tab=error?'admin':'events';render()}
 
+async function endVote(id){if(!confirm('إنهاء التصويت؟'))return;const e=events.find(x=>x.id===id),now=Date.now();
+ const {error}=await sb.from('events').update({ended_at:new Date(now).toISOString(),registration_closes_at:new Date(Math.min(now,+new Date(e.registration_closes_at))).toISOString()}).eq('id',id);
+ notice=error?'تعذّر الإنهاء.':'انتهى التصويت، النتيجة بتبويب الفائزون.';await load();tab=error?'admin':'winners';render()}
+async function delEvent(id){if(!confirm('حذف الفعالية وكل تسجيلاتها؟'))return;
+ const {error}=await sb.from('events').delete().eq('id',id);notice=error?'تعذّر الحذف: '+error.message:'انحذفت الفعالية.';await load();render()}
+async function wipeAll(){if(prompt('للتأكيد اكتب كلمة: مسح')!=='مسح')return;
+ const {error}=await sb.from('events').delete().neq('id','00000000-0000-0000-0000-000000000000');notice=error?'تعذّر المسح: '+error.message:'انمسحت كل السجلات.';await load();render()}
 async function draw(id){const n=parseInt(prompt('كم عدد الفائزين؟','1'),10);if(!n)return;
  const e=events.find(x=>x.id===id);
  const {data}=await sb.from('registrations').select('member_id').eq('event_id',id).eq('status','confirmed');

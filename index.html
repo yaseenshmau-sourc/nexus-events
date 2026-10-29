@@ -122,13 +122,11 @@ async function init(){
  app.innerHTML='<div class="boot">جاري التحقق…</div>';
  const meta=session.user.user_metadata||{},id=meta.provider_id;
  if(session.provider_token){
-  try{const r=await fetch(`https://discord.com/api/v10/users/@me/guilds/${NEXUS.guild}/member`,{headers:{Authorization:'Bearer '+session.provider_token}});
-   if(!r.ok){await sb.auth.signOut();return renderLogin('لازم تكون عضو بالسيرفر عشان تدخل.')}
-   const j=await r.json();
-   await sb.from('members').upsert({discord_id:id,username:meta.full_name||meta.name||'عضو',avatar_url:meta.avatar_url,joined_server_at:j.joined_at},{onConflict:'discord_id',ignoreDuplicates:true});
+  try{const {data,error}=await sb.functions.invoke('verify-member',{body:{token:session.provider_token}});
+   if(error||!data?.ok){await sb.auth.signOut();return renderLogin('لازم تكون عضو بالسيرفر عشان تدخل.')}
   }catch(e){await sb.auth.signOut();return renderLogin('تعذّر التحقق من العضوية، جرّب مرة ثانية.')}}
- const {data:m}=await sb.from('members').select('discord_id,username,avatar_url,is_admin').eq('discord_id',id).maybeSingle();
- if(!m){await sb.auth.signOut();return renderLogin('سجّل الدخول من جديد لإكمال التحقق.')}
+ const {data:m}=await sb.from('members').select('discord_id,username,avatar_url,is_admin,verified').eq('discord_id',id).maybeSingle();
+ if(!m||!m.verified){await sb.auth.signOut();return renderLogin('سجّل الدخول من جديد لإكمال التحقق.')}
  me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000)}
 
 async function load(){

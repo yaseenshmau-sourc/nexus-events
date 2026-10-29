@@ -2284,8 +2284,9 @@ WEB_ENABLED = bool(SB_URL and SB_KEY)
 
 
 async def sb_req(method: str, path: str, **kw):
-    headers = {"apikey": SB_KEY, "Authorization": f"Bearer {SB_KEY}",
-               "Content-Type": "application/json", **kw.pop("headers", {})}
+    headers = {"apikey": SB_KEY, "Content-Type": "application/json", **kw.pop("headers", {})}
+    if SB_KEY.startswith("eyJ"):  # المفاتيح القديمة (JWT) بس بتحتاج Authorization
+        headers["Authorization"] = f"Bearer {SB_KEY}"
     async with aiohttp.ClientSession() as session:
         async with session.request(method, f"{SB_URL}/rest/v1/{path}", headers=headers, **kw) as resp:
             if resp.status >= 300:
@@ -2326,10 +2327,14 @@ async def sync_balances():
             rows.append(balance_row(guild.id, int(uid)))
     if rows:
         await push_balances(rows)
+    if web_loop.current_loop == 0:
+        print(f"[WEB] الربط شغّال، تمت مزامنة {len(rows)} حساب")
 
 
 async def sync_shop():
-    rows = [{"name": name, "price": price, "active": True} for name, price in SHOP.items()]
+    rows = [{"name": name, "price": price, "active": True,
+             "description": "يمسح تحذير واحد من سجلك" if name == WARN_ITEM else "رتبة خاصة بالسيرفر"}
+            for name, price in SHOP.items()]
     await sb_req("POST", "store_items?on_conflict=name", json=rows,
                  headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
     names = ",".join('"%s"' % n for n in SHOP)
@@ -2369,6 +2374,8 @@ async def process_orders():
 @tasks.loop(seconds=15)
 async def web_loop():
     if not WEB_ENABLED:
+        if web_loop.current_loop == 0:
+            print("[WEB] الربط معطّل: ناقص SUPABASE_URL أو SUPABASE_SERVICE_KEY")
         return
     try:
         await process_orders()

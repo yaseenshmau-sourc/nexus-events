@@ -71,7 +71,7 @@ input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;bor
 .vc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,#ffffff22 50%,transparent 60%);pointer-events:none}
 .vc .t,.vc .b{display:flex;align-items:center;gap:10px;justify-content:space-between}.vc .no{font:26px/1 monospace;letter-spacing:3px;direction:ltr;text-align:center}
 .vc .b img{width:38px;height:38px;border-radius:50%;border:2px solid #fff8}
-.lg{height:34px;max-width:120px;object-fit:contain;background:#fff;border-radius:8px;padding:3px;color:#111}
+.lg{display:inline-flex;align-items:center;height:34px;max-width:130px;background:#fff;border-radius:8px;padding:3px 8px;color:#111;font-size:13px}.lg img{display:none;height:100%;max-width:100%;object-fit:contain}.lg.ok img{display:block}.lg.ok b{display:none}
 .bk{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}.bk button{background:var(--s2);border:2px solid transparent;border-radius:14px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:700}.bk button.on{border-color:var(--c)}
 .empty{text-align:center;color:var(--m);padding:40px 10px}
 #reveal{position:fixed;inset:0;z-index:40;background:radial-gradient(circle,#1a2f66ee,#02040aee);display:grid;place-content:center;text-align:center;padding:20px}
@@ -135,7 +135,7 @@ async function init(){
   }catch(e){await sb.auth.signOut();return renderLogin('تعذّر التحقق من العضوية، جرّب مرة ثانية.')}}
  const {data:m}=await sb.from('members').select('discord_id,username,avatar_url,is_admin,verified').eq('discord_id',id).maybeSingle();
  if(!m||!m.verified){await sb.auth.signOut();return renderLogin('سجّل الدخول من جديد لإكمال التحقق.')}
- me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000)}
+ me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000);setInterval(async()=>{if(sec==='bank'&&acct&&bt!=='adm'){await load();render()}},30000)}
 
 async function load(){
  const {data:ev}=await sb.from('events').select('*').eq('is_archived',false).order('starts_at');events=ev||[];
@@ -189,7 +189,9 @@ async function castVote(id,i){const {error}=await sb.from('votes').insert({event
  notice=error?'ما انحسب صوتك: غالباً التصويت انقفل أو صوّتت قبل.':'تم تسجيل صوتك.';await load();render()}
 const CUR='🪙';const wal=()=>bal?.coins||0,bnk=()=>bal?.bank||0;
 const BANKS={pal:['بنك فلسطين','bank-pal.png','#0d7a45'],ahli:['البنك الأهلي','bank-ahli.png','#1b4fd0'],arab:['البنك العربي','bank-arab.png','#7a1f2b'],quds:['بنك القدس','bank-quds.png','#0f5a8a']};
-const logo=k=>`<img class="lg" src="${BANKS[k][1]}" alt="${BANKS[k][0]}" onerror="this.outerHTML='<b>${BANKS[k][0]}</b>'">`;
+const EXT=['png','jpg','jpeg','webp','svg'];
+const logo=k=>`<span class="lg"><img src="bank-${k}.png" data-k="${k}" data-i="0" alt="" onload="this.parentNode.classList.add('ok')" onerror="nextLogo(this)"><b>${BANKS[k][0]}</b></span>`;
+function nextLogo(i){const n=+i.dataset.i+1;if(n<EXT.length){i.dataset.i=n;i.src='bank-'+i.dataset.k+'.'+EXT[n]}else i.remove()}
 const money=n=>Number(n).toLocaleString('en')+' '+CUR;
 function bankView(){
  const sub=`<nav>${[['me','حسابي'],['shop','المتجر']].concat(isAdmin?[['adm','إدارة البنك']]:[]).map(([k,v])=>`<button class="${bt===k?'on':''}" onclick="bt='${k}';render()">${v}</button>`).join('')}</nav>`;
@@ -202,7 +204,7 @@ function pickBank(k,el){pbk=k;document.querySelectorAll('.bk button').forEach(b=
 async function openAcct(){const n=b_n.value.trim(),d=b_d.value,c=b_c.value.trim();if(!n||!d||!c||!pbk){notice='عبّي كل الخانات واختر بنك.';return render()}
  const {error}=await sb.rpc('open_account',{n,b:d,c,bk:pbk});notice=error?'تعذّر فتح الحساب: '+error.message:'انفتح حسابك، هاي بطاقتك.';await load();render()}
 function cardView(){const bk=BANKS[acct.bank],no=acct.card_no.replace(/(\d{3})(?=\d)/g,'$1 ');
- return`<div class="vc" style="--k:${bk[2]}"><div class="t">${logo(acct.bank)}<b style="font:italic 700 26px Tajawal">VISA</b></div><div class="no">${no}</div><div class="b">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<div style="flex:1"><b>${esc(acct.full_name)}</b><div style="font-size:13px;opacity:.8">${bk[0]}</div></div><div><small>المحفظة</small><div style="font:24px Lalezar">${money(wal())}</div><small>البنك: ${money(bnk())}</small></div></div></div>
+ return`<div class="vc" style="--k:${bk[2]}"><div class="t">${logo(acct.bank)}<b style="font:italic 700 26px Tajawal">VISA</b></div><div class="no">${no}</div><div class="b">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<div style="flex:1"><b>${esc(acct.full_name)}</b><div style="font-size:13px;opacity:.8">${bk[0]}</div></div><div><small>المحفظة</small><div style="font:24px Lalezar">${money(wal())}</div><small>البنك: ${money(bnk())}</small>${bal?'':'<small> (بانتظار البوت)</small>'}</div></div></div>
  <div class="card"><h3>مشترياتي</h3>${ords.filter(o=>o.member_id===me.discord_id&&o.kind==='buy').slice(0,6).map(o=>`<div class="row" style="margin:6px 0"><span>${esc(o.item)}</span><span class="muted">${o.status==='done'?'✓ تم':o.status==='pending'?'قيد التنفيذ…':esc(o.result||'فشل')}</span></div>`).join('')||'<p>ما في مشتريات.</p>'}</div>`}
 function shopView(){if(!acct)return openForm();
  const lo=ords.find(o=>o.member_id===me.discord_id&&o.kind==='buy');return`<div class="msg">محفظتك: ${money(wal())}${lo?` · آخر طلب: ${lo.status==='pending'?'قيد التنفيذ…':esc(lo.result||'')}`:''}</div>`+(items.map(i=>`<div class="card"><h3>${esc(i.name)}</h3><p>${esc(i.description||'')}</p><div class="row"><b class="cd">${money(i.price)}</b><button class="btn" ${i.stock===0||wal()<i.price?'disabled':''} onclick="buy('${i.id}')">${i.stock===0?'نفذت الكمية':'اشتر'}</button></div></div>`).join('')||'<div class="empty">المتجر فاضي حالياً.</div>')}

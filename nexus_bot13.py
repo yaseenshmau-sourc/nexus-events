@@ -2360,6 +2360,26 @@ async def process_orders():
             ok = True  # لو كان عنده حساب أصلاً، مش مشكلة
         elif order["kind"] == "buy":
             ok, msg = await purchase(guild, member, order["item"])
+        elif order["kind"] == "deposit":
+            ok, msg = bank_deposit_op(guild.id, uid, str(order["amount"]))
+        elif order["kind"] == "withdraw":
+            ok, msg = bank_withdraw_op(guild.id, uid, str(order["amount"]))
+        elif order["kind"] == "transfer":
+            amount = int(order["amount"] or 0)
+            tid = int(order["item"] or 0)
+            target = guild.get_member(tid)
+            sender = get_user(guild.id, uid)
+            if target is None or target.bot or tid == uid:
+                msg = "❌ العضو المستلم غير صالح."
+            elif not 1 <= amount <= 1000000:
+                msg = "❌ المبلغ لازم يكون بين 1 و 1000000."
+            elif sender.get("coins", 0) < amount:
+                msg = "❌ رصيد المحفظة ما يكفي."
+            else:
+                sender["coins"] -= amount
+                add_coins(guild.id, tid, amount)
+                save_data()
+                ok, msg = True, f"🔁 تم تحويل {amount} 🪙 إلى {target.display_name}"
         elif order["kind"] == "credit":
             user = get_user(guild.id, uid)
             user["coins"] = max(0, user.get("coins", 0) + int(order["amount"] or 0))
@@ -2368,7 +2388,10 @@ async def process_orders():
         await sb_req("PATCH", "web_orders", params={"id": f"eq.{order['id']}"},
                      json={"status": "done" if ok else "failed", "result": msg[:300],
                            "done_at": datetime.datetime.utcnow().isoformat() + "Z"})
-        await push_balances([balance_row(guild.id, uid)])
+        rows = [balance_row(guild.id, uid)]
+        if order["kind"] == "transfer" and ok:
+            rows.append(balance_row(guild.id, int(order["item"])))
+        await push_balances(rows)
 
 
 @tasks.loop(seconds=15)

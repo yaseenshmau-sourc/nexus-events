@@ -82,6 +82,16 @@ input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;bor
 .t1{--k:#2f7bff;background:linear-gradient(160deg,#0f3b99,#07173d)}
 .t2{--k:#f0b429;background:linear-gradient(160deg,#4a3410,#140d03);animation-delay:.12s}
 .tile:active{transform:scale(.97)}.tile svg{width:44%;max-width:160px;filter:drop-shadow(0 6px 14px #0009)}
+.vc .visa{font:italic 700 28px Tajawal;letter-spacing:1px;text-shadow:0 2px 6px #0008}
+.vc .mid{display:flex;align-items:center;gap:12px;direction:ltr}
+.chip{width:46px;height:34px;border-radius:7px;background:linear-gradient(135deg,#ffe9a8,#c99a2e 60%,#f5d77a);box-shadow:inset 0 0 0 1px #0004,inset 0 0 8px #fff8;position:relative}
+.chip::before{content:"";position:absolute;inset:7px 11px;border:1px solid #0005;border-radius:3px}
+.nfc{width:26px;height:26px;opacity:.85;transform:rotate(90deg)}
+.vc .sm{font-size:11px;opacity:.8;letter-spacing:1px}.vc .no{font-size:28px;text-shadow:0 2px 6px #0009}
+.vc::before{content:"";position:absolute;inset:-40% -20% auto auto;width:70%;height:140%;background:radial-gradient(circle,#ffffff2e,transparent 60%);pointer-events:none}
+.vc .lg.ok{height:44px}
+.acts{display:flex;gap:8px;margin-bottom:12px}.acts button{flex:1;padding:12px;border-radius:12px;background:var(--s2);font-weight:700}.acts button.on{background:linear-gradient(135deg,var(--b),var(--c));color:#04101f}
+.chips b.s{font-size:16px}
 .empty{text-align:center;color:var(--m);padding:40px 10px}
 #reveal{position:fixed;inset:0;z-index:40;background:radial-gradient(circle,#1a2f66ee,#02040aee);display:grid;place-content:center;text-align:center;padding:20px}
 #reveal h2{font-size:46px;color:var(--g);text-shadow:0 0 40px var(--g);animation:rise .8s both}
@@ -99,7 +109,7 @@ input,textarea,select{width:100%;background:#0a1124;border:1px solid #223664;bor
 const FIRE=[195,32]; /* درجة لون النار: للون برتقالي غيّرها إلى [12,40] */
 const TYPES={draw:['سحب','#3fd0ff'],contest:['مسابقة','#2f7bff'],vote:['تصويت','#b06bff'],tournament:['بطولة','#ff3b4e']};
 const app=document.getElementById('app');
-let scr='home',balErr='',bal=null,ords=[],sec='events',bt='me',acct=null,items=[],purch=[],pbk='',sb,me,isAdmin=false,tab='events',events=[],wins={},votes=[],counts={},board=[],logs=[],myRegs=new Set(),notice='';
+let act='',mlist=[],scr='home',balErr='',bal=null,ords=[],sec='events',bt='me',acct=null,items=[],purch=[],pbk='',sb,me,isAdmin=false,tab='events',events=[],wins={},votes=[],counts={},board=[],logs=[],myRegs=new Set(),notice='';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=d=>new Date(d).toLocaleString('ar',{dateStyle:'medium',timeStyle:'short'});
 const pad=n=>String(n).padStart(2,'0');
@@ -144,7 +154,7 @@ async function init(){
   }catch(e){await sb.auth.signOut();return renderLogin('تعذّر التحقق من العضوية، جرّب مرة ثانية.')}}
  const {data:m}=await sb.from('members').select('discord_id,username,avatar_url,is_admin,verified').eq('discord_id',id).maybeSingle();
  if(!m||!m.verified){await sb.auth.signOut();return renderLogin('سجّل الدخول من جديد لإكمال التحقق.')}
- me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000);setInterval(async()=>{if(scr==='bank'&&acct&&bt!=='adm'){await load();render()}},30000)}
+ me=m;isAdmin=!!m.is_admin;await load();render();setInterval(tick,1000);setInterval(async()=>{if(scr==='bank'&&acct&&bt!=='adm'&&!act){await load();render()}},30000)}
 
 async function load(){
  const {data:ev}=await sb.from('events').select('*').eq('is_archived',false).order('starts_at');events=ev||[];
@@ -159,6 +169,7 @@ async function load(){
  const {data:it}=await sb.from('store_items').select('*').eq('active',true).order('price');items=it||[];
  const {data:bb,error:be}=await sb.from('bot_balances').select('*').eq('discord_id',me.discord_id).maybeSingle();bal=bb;balErr=be?be.message:'';
  const {data:od}=await sb.from('web_orders').select('kind,item,amount,status,result,created_at,member_id,members(username)').order('created_at',{ascending:false}).limit(20);ords=od||[];
+ const {data:ml}=await sb.from('members').select('discord_id,username').order('username');mlist=ml||[];
  const {data:rg}=await sb.from('registrations').select('event_id,status').eq('member_id',me.discord_id).neq('status','cancelled');
  myRegs=new Map((rg||[]).map(r=>[r.event_id,r.status]))}
 
@@ -219,8 +230,27 @@ function pickBank(k,el){pbk=k;document.querySelectorAll('.bk button').forEach(b=
 async function openAcct(){const n=b_n.value.trim(),d=b_d.value,c=b_c.value.trim();if(!n||!d||!c||!pbk){notice='عبّي كل الخانات واختر بنك.';return render()}
  const {error}=await sb.rpc('open_account',{n,b:d,c,bk:pbk});notice=error?'تعذّر فتح الحساب: '+error.message:'انفتح حسابك، هاي بطاقتك.';await load();render()}
 function cardView(){const bk=BANKS[acct.bank],no=acct.card_no.replace(/(\d{3})(?=\d)/g,'$1 ');
- return`<div class="vc" style="--k:${bk[2]}"><div class="t">${logo(acct.bank)}<b style="font:italic 700 26px Tajawal">VISA</b></div><div class="no">${no}</div><div class="b">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<div style="flex:1"><b>${esc(acct.full_name)}</b><div style="font-size:13px;opacity:.8">${bk[0]}</div></div><div><small>المحفظة</small><div style="font:24px Lalezar">${money(wal())}</div><small>البنك: ${money(bnk())}</small>${bal?'':`<small> (${balErr?'خطأ: '+esc(balErr):'بانتظار البوت'})</small>`}</div></div></div>
- <div class="card"><h3>مشترياتي</h3>${ords.filter(o=>o.member_id===me.discord_id&&o.kind==='buy').slice(0,6).map(o=>`<div class="row" style="margin:6px 0"><span>${esc(o.item)}</span><span class="muted">${o.status==='done'?'✓ تم':o.status==='pending'?'قيد التنفيذ…':esc(o.result||'فشل')}</span></div>`).join('')||'<p>ما في مشتريات.</p>'}</div>`}
+ const KL={buy:'شراء',deposit:'إيداع',withdraw:'سحب',transfer:'تحويل',credit:'من الإدارة'},nm=id=>mlist.find(m=>m.discord_id===id)?.username||'';
+ const mine=ords.filter(o=>o.member_id===me.discord_id&&o.kind!=='open').slice(0,8);
+ return`<div class="vc" style="--k:${bk[2]}"><div class="t">${logo(acct.bank)}<b class="visa">VISA</b></div>
+ <div class="mid"><span class="chip"></span><svg class="nfc" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"><path d="M8 6c3 3.500 3 8.500 0 12M12 4c4.500 5 4.500 11 0 16M16 2c6 6.500 6 13.500 0 20"/></svg></div>
+ <div class="no">${no}</div>
+ <div class="b">${me.avatar_url?`<img src="${esc(me.avatar_url)}" alt="">`:''}<div style="flex:1"><b>${esc(acct.full_name)}</b><div class="sm">${bk[0]}</div></div><div class="sm" style="text-align:left">NEXUS<br>MEMBER</div></div></div>
+ <div class="chips" style="margin-bottom:12px"><span><b class="s">${money(wal())}</b>المحفظة</span><span><b class="s">${money(bnk())}</b>البنك</span><span><b class="s">${money(wal()+bnk())}</b>المجموع</span></div>
+ <div class="acts"><button class="${act==='dep'?'on':''}" onclick="setAct('dep')">إيداع</button><button class="${act==='wd'?'on':''}" onclick="setAct('wd')">سحب</button><button class="${act==='tr'?'on':''}" onclick="setAct('tr')">تحويل</button></div>
+ ${act?actForm():''}
+ <div class="msg">💹 الربح حوالي 2.4% باليوم على أول 50,000 بالبنك، والسيرفر بيوزعه كل ساعة.</div>
+ <div class="card"><h3>آخر العمليات</h3>${mine.map(o=>`<div class="row" style="margin:8px 0"><span>${KL[o.kind]||o.kind} ${o.kind==='buy'?esc(o.item):money(o.amount)}${o.kind==='transfer'?' ← '+esc(nm(o.item)):''}</span><span class="muted">${o.status==='done'?'✓ تمت':o.status==='pending'?'قيد التنفيذ…':esc(o.result||'فشلت')}</span></div>`).join('')||'<p>ما في عمليات.</p>'}</div>`}
+function actForm(){const t=act==='tr';return`<div class="card"><h3>${{dep:'إيداع من المحفظة للبنك',wd:'سحب من البنك للمحفظة',tr:'تحويل لعضو (من المحفظة)'}[act]}</h3>${t?`<label>اسم العضو</label><input id="t_u" list="dl" autocomplete="off"><datalist id="dl">${mlist.filter(m=>m.discord_id!==me.discord_id).map(m=>`<option value="${esc(m.username)}">`).join('')}</datalist>`:''}<label>المبلغ</label><input id="t_a" type="number" min="1" inputmode="numeric"><div class="row"><button class="btn" onclick="sendBank()">تأكيد</button></div></div>`}
+function setAct(a){act=act===a?'':a;render()}
+async function sendBank(){const amt=Math.floor(+t_a.value),kind={dep:'deposit',wd:'withdraw',tr:'transfer'}[act];let tgt=null;
+ if(!(amt>0)){notice='اكتب مبلغ صحيح.';return render()}
+ if(act==='tr'){const n=t_u.value.trim().toLowerCase(),m=mlist.find(x=>x.username.toLowerCase()===n);if(!m){notice='اختر اسم العضو من القائمة.';return render()}tgt=m.discord_id}
+ const {error}=await sb.rpc('place_bank_order',{k:kind,amt,tgt});
+ if(error){notice='تعذّرت العملية: '+error.message;return render()}
+ act='';notice='تم إرسال العملية للسيرفر…';await load();render();pollOrders()}
+async function pollOrders(){for(let i=0;i<8;i++){await new Promise(r=>setTimeout(r,3000));if(scr!=='bank')return;await load();render();
+ if(!ords.some(o=>o.member_id===me.discord_id&&o.status==='pending')){const o=ords.find(x=>x.member_id===me.discord_id);notice=o?(o.status==='done'?'✅ ':'❌ ')+(o.result||''):'';render();return}}}
 function shopView(){if(!acct)return openForm();
  const lo=ords.find(o=>o.member_id===me.discord_id&&o.kind==='buy');return`<div class="msg">محفظتك: ${money(wal())}${lo?` · آخر طلب: ${lo.status==='pending'?'قيد التنفيذ…':esc(lo.result||'')}`:''}</div>`+(items.map(i=>`<div class="card"><h3>${esc(i.name)}</h3><p>${esc(i.description||'')}</p><div class="row"><b class="cd">${money(i.price)}</b><button class="btn" ${i.stock===0||wal()<i.price?'disabled':''} onclick="buy('${i.id}')">${i.stock===0?'نفذت الكمية':'اشتر'}</button></div></div>`).join('')||'<div class="empty">المتجر فاضي حالياً.</div>')}
 async function buy(id){if(!confirm('تأكيد الشراء؟'))return;const {error}=await sb.rpc('buy_item',{iid:id});notice=error?'تعذّر الشراء: '+error.message:'تم إرسال طلبك للسيرفر، بيتنفذ خلال ثواني.';await load();render();if(!error)setTimeout(async()=>{await load();render()},20000)}
